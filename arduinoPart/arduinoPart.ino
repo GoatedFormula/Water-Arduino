@@ -1,32 +1,52 @@
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>
 
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+int sensorPin = A0;
+int greenLED = 2;
+int yellowLED = 3;
+int redLED = 4;
+int buzzer = 5;
 
-void setup() {
+int trig = 13;
+
+void setup()
+{
+  pinMode(greenLED, OUTPUT);
+  pinMode(yellowLED, OUTPUT);
+  pinMode(redLED, OUTPUT);
+  pinMode(buzzer, OUTPUT);
+  pinMode(trig, OUTPUT);
   Serial.begin(9600);
-
-  lcd.init();
-  lcd.backlight();
-
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Waiting...");
 }
 
-void loop() {
-  if (Serial.available() > 0) {
-    String song = Serial.readStringUntil('\n');
-    song.trim();
+void loop()
+{
+  int waterLevel = analogRead(sensorPin);
+  Serial.println(waterLevel);
 
-    if (song.length() > 0) {
-      lcd.clear();
+  if (waterLevel < 233)
+  {
+    digitalWrite(greenLED, HIGH);
+    digitalWrite(yellowLED, LOW);
+    digitalWrite(redLED, LOW);
+    digitalWrite(buzzer, LOW);
 
-      lcd.setCursor(0, 0);
-      lcd.print("NOW PLAYING:");
+    digitalWrite(trig, LOW);
+  }
+  else if (waterLevel < 350)
+  {
+    digitalWrite(greenLED, LOW);
+    digitalWrite(yellowLED, HIGH);
+    digitalWrite(redLED, LOW);
+    digitalWrite(buzzer, LOW);
 
-      lcd.setCursor(0, 1);
-      lcd.print(song.substring(0, 16));
-    }
+    digitalWrite(trig, LOW);
+  }
+  else if (waterLevel > 650)
+  {
+    digitalWrite(greenLED, LOW);
+    digitalWrite(yellowLED, LOW);
+    digitalWrite(redLED, HIGH);
+    digitalWrite(buzzer, HIGH);
+
+    digitalWrite(trig, HIGH);
   }
 }
