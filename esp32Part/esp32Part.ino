@@ -1,4 +1,4 @@
-#define BLYNK_TEMPLATE_ID "TMPL3u97bDpbM"
+#define BLYNK_TEMPLATE_ID "TMPL6lZHByZAh"
 #define BLYNK_TEMPLATE_NAME "Alert"
 #define BLYNK_AUTH_TOKEN "a0U21GD5uK8nCOzNk8KDgnG6VLCYjqZ2"
 
@@ -7,32 +7,70 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <BlynkSimpleEsp32.h>
+#include <WiFiManager.h>
 
-bool ringed = false;
+const int trig = 13;
+const int wifiResetPin = 46;
 
-char ssid[] = "HONOR 600 LITE"; //wifi name
-char pass[] = "teseyivjgq"; //wifi psw
 char auth[] = BLYNK_AUTH_TOKEN;
+char msg[] = "Alert triggered";
 
-char msg[] = "water over"; //mesej
+BlynkTimer timer;
+bool alertSent = false;
 
-void setup() {
-  Serial.begin(9600);
+void checkSensor()
+{
+    int sensorValue = digitalRead(trig);
 
-  pinMode(18, INPUT);
+    if (sensorValue == HIGH && !alertSent)
+    {
+        Blynk.logEvent("Alert", msg);
+        alertSent = true;
+    }
 
-  Blynk.begin(auth, ssid, pass);
+    if (sensorValue == LOW)
+    {
+        alertSent = false;
+    }
 }
 
-void loop() {
-  Blynk.run();
+void setup()
+{
+    Serial.begin(115200);
 
-  if(digitalRead(18) == HIGH && ringed == false){
-    Blynk.logEvent("alerting");
-    ringed = true;
-  }
+    pinMode(trig, INPUT);
+    pinMode(wifiResetPin, INPUT);
+    pinMode(4 , OUTPUT);
 
-  if(digitalRead(18) == LOW){
-    ringed = false;
-  }
+    WiFi.mode(WIFI_STA);
+
+    WiFiManager wm;
+
+    if (digitalRead(wifiResetPin) == HIGH)
+    {
+        wm.resetSettings();
+
+        if (!wm.startConfigPortal("wifi setup", "12345678"))
+        {
+            ESP.restart();
+        }
+    }
+    else
+    {
+        if (!wm.autoConnect("wifi setup", "12345678"))
+        {
+            ESP.restart();
+        }
+    }
+
+    Blynk.config(auth);
+
+    timer.setInterval(500L, checkSensor);
+}
+
+void loop()
+{
+    digitalWrite(4 , HIGH);
+    Blynk.run();
+    timer.run();
 }
