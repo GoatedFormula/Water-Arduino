@@ -11,7 +11,6 @@
 #include <WiFiManager.h>
 
 const int sensorPin = 8;
-const int wifiResetPin = 4;
 const int greenLED = 13;
 const int yellowLED = 12;
 const int redLED = 11;
@@ -63,7 +62,6 @@ void setup()
     Serial.begin(115200);
 
     pinMode(sensorPin, INPUT);
-    pinMode(wifiResetPin, INPUT);
 
     pinMode(greenLED, OUTPUT);
     pinMode(yellowLED, OUTPUT);
@@ -73,21 +71,9 @@ void setup()
 
     WiFiManager wm;
 
-    if (digitalRead(wifiResetPin) == LOW)
+    if (!wm.autoConnect("wifi setup", "12345678"))
     {
-        wm.resetSettings();
-
-        if (!wm.startConfigPortal("wifi setup", "12345678"))
-        {
-            ESP.restart();
-        }
-    }
-    else
-    {
-        if (!wm.autoConnect("wifi setup", "12345678"))
-        {
-            ESP.restart();
-        }
+        ESP.restart();
     }
 
     Blynk.config(auth);
