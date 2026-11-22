@@ -27,7 +27,7 @@ void checkSensor()
 
     Serial.println(waterLevel);
 
-    if (waterLevel < 233)
+    if (waterLevel < 50)
     {
         digitalWrite(greenLED, HIGH);
         digitalWrite(yellowLED, LOW);
@@ -35,7 +35,7 @@ void checkSensor()
 
         alertSent = false;
     }
-    else if (waterLevel < 350)
+    else if (waterLevel < 999)
     {
         digitalWrite(greenLED, LOW);
         digitalWrite(yellowLED, HIGH);
@@ -43,7 +43,7 @@ void checkSensor()
 
         alertSent = false;
     }
-    else if (waterLevel > 800)
+    else if (waterLevel >= 1000)
     {
         digitalWrite(greenLED, LOW);
         digitalWrite(yellowLED, LOW);
@@ -51,7 +51,7 @@ void checkSensor()
 
         if (!alertSent && Blynk.connected())
         {
-            Blynk.logEvent("alert", "Water level is too high!");
+            Blynk.logEvent("Alert", "Water level is too high!");
             alertSent = true;
         }
     }
@@ -71,7 +71,9 @@ void setup()
 
     WiFiManager wm;
 
-    if (!wm.autoConnect("wifi setup", "12345678"))
+    wm.resetSettings();
+
+    if (!wm.startConfigPortal("wifi setup", "12345678"))
     {
         ESP.restart();
     }
