@@ -1,3 +1,4 @@
+
 #define BLYNK_TEMPLATE_ID "TMPL6lZHByZAh"
 #define BLYNK_TEMPLATE_NAME "Alert"
 #define BLYNK_AUTH_TOKEN "a0U21GD5uK8nCOzNk8KDgnG6VLCYjqZ2"
@@ -9,28 +10,51 @@
 #include <BlynkSimpleEsp32.h>
 #include <WiFiManager.h>
 
-const int trig = 13;
-const int wifiResetPin = 46;
+const int sensorPin = 8;
+const int wifiResetPin = 4;
+const int greenLED = 13;
+const int yellowLED = 12;
+const int redLED = 11;
 
 char auth[] = BLYNK_AUTH_TOKEN;
-char msg[] = "Alert triggered";
 
 BlynkTimer timer;
+
 bool alertSent = false;
 
 void checkSensor()
 {
-    int sensorValue = digitalRead(trig);
+    int waterLevel = analogRead(sensorPin);
 
-    if (sensorValue == HIGH && !alertSent)
-    {
-        Blynk.logEvent("Alert", msg);
-        alertSent = true;
-    }
+    Serial.println(waterLevel);
 
-    if (sensorValue == LOW)
+    if (waterLevel < 233)
     {
+        digitalWrite(greenLED, HIGH);
+        digitalWrite(yellowLED, LOW);
+        digitalWrite(redLED, LOW);
+
         alertSent = false;
+    }
+    else if (waterLevel < 350)
+    {
+        digitalWrite(greenLED, LOW);
+        digitalWrite(yellowLED, HIGH);
+        digitalWrite(redLED, LOW);
+
+        alertSent = false;
+    }
+    else if (waterLevel > 650)
+    {
+        digitalWrite(greenLED, LOW);
+        digitalWrite(yellowLED, LOW);
+        digitalWrite(redLED, HIGH);
+
+        if (!alertSent && Blynk.connected())
+        {
+            Blynk.logEvent("alert", "Water level is too high!");
+            alertSent = true;
+        }
     }
 }
 
@@ -38,15 +62,18 @@ void setup()
 {
     Serial.begin(115200);
 
-    pinMode(trig, INPUT);
+    pinMode(sensorPin, INPUT);
     pinMode(wifiResetPin, INPUT);
-    pinMode(4 , OUTPUT);
+
+    pinMode(greenLED, OUTPUT);
+    pinMode(yellowLED, OUTPUT);
+    pinMode(redLED, OUTPUT);
 
     WiFi.mode(WIFI_STA);
 
     WiFiManager wm;
 
-    if (digitalRead(wifiResetPin) == HIGH)
+    if (digitalRead(wifiResetPin) == LOW)
     {
         wm.resetSettings();
 
@@ -70,7 +97,6 @@ void setup()
 
 void loop()
 {
-    digitalWrite(4 , HIGH);
     Blynk.run();
     timer.run();
 }
