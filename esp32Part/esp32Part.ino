@@ -35,7 +35,7 @@ void checkSensor()
 
         alertSent = false;
     }
-    else if (waterLevel < 999)
+    else if (waterLevel <= 999)
     {
         digitalWrite(greenLED, LOW);
         digitalWrite(yellowLED, HIGH);
